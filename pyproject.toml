@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resilient-app"
+version = "0.1.0"
+authors = [
+  { name = "Developer" }
+]
+description = "A resilient Python application with engineering-grade exception handling"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+resilient = "resilient_app.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/example/resilient-app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

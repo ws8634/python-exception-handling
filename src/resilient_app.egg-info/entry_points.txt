@@ -1,0 +1,2 @@
+[console_scripts]
+resilient = resilient_app.cli.main:main
