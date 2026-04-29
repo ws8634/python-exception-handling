@@ -32,6 +32,45 @@ from resilient_app.core import (
 class TestStructuredFormatter:
     """Test structured log formatting."""
 
+    def test_format_with_exc_info_is_single_line(self):
+        """ERROR level with exc_info produces single-line output with escaped stack.
+
+        The first line (and the only line for the log record) must:
+        - Be a single line (no visible newlines)
+        - Contain the code field if present
+        - Include stack information as escaped string in 'stack=' field
+        """
+        formatter = StructuredFormatter()
+
+        try:
+            raise ValueError("Test exception")
+        except ValueError:
+            import sys
+            exc_info = sys.exc_info()
+
+        record = logging.LogRecord(
+            name="test_logger",
+            level=logging.ERROR,
+            pathname="",
+            lineno=0,
+            msg="Error occurred",
+            args=None,
+            exc_info=exc_info,
+        )
+        record.code = DOMAIN_VALIDATION_ERROR
+
+        formatted = formatter.format(record)
+
+        lines = formatted.split("\n")
+        assert len(lines) == 1, f"Expected single line, got {len(lines)} lines: {formatted}"
+
+        assert "[code=DOMAIN_VALIDATION_ERROR]" in formatted, "Code field should be present"
+        assert "stack=" in formatted, "Stack field should be present as escaped string"
+
+        assert "\\n" in formatted, "Newlines should be escaped as literal \\n"
+        assert "ValueError" in formatted, "Exception type should be in stack"
+        assert "Test exception" in formatted, "Exception message should be in stack"
+
     def test_format_includes_timestamp_level_logger(self):
         """Basic log format includes timestamp, level, logger."""
         formatter = StructuredFormatter()

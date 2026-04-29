@@ -118,10 +118,14 @@ def run_demo() -> int:
 
     if all_passed:
         print("\nAll demos completed as expected!", file=sys.stdout)
+        sys.stdout.flush()
+        sys.stderr.flush()
         print(f"{ERROR_CODE_PREFIX}{SUCCESS}", file=sys.stderr)
         return 0
     else:
         print("\nSome demos did not behave as expected.", file=sys.stderr)
+        sys.stdout.flush()
+        sys.stderr.flush()
         print(f"{ERROR_CODE_PREFIX}{CLI_EXECUTION_ERROR}", file=sys.stderr)
         return 1
 

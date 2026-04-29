@@ -7,6 +7,7 @@ Covers:
 """
 
 import io
+import subprocess
 import sys
 from unittest import mock
 
@@ -104,3 +105,57 @@ class TestMain:
                 main()
 
         assert exc_info.value.code == 0
+
+
+class TestDemoErrorCodePosition:
+    """Test that ERROR_CODE appears at the end of combined output."""
+
+    def test_error_code_appears_last_in_combined_output(self):
+        """When running --demo, ERROR_CODE: should be at the very end.
+
+        This uses subprocess to capture combined stdout+stderr,
+        simulating what the user sees when both streams are merged.
+        """
+        result = subprocess.run(
+            [sys.executable, "-m", "resilient_app", "--demo"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        assert result.returncode == 0, f"Demo should succeed, got exit code {result.returncode}"
+
+        output = result.stdout.strip()
+        lines = output.split("\n")
+
+        assert len(lines) > 0, "Should have output"
+
+        last_line = lines[-1]
+        assert last_line.startswith(ERROR_CODE_PREFIX), (
+            f"Last line should start with '{ERROR_CODE_PREFIX}', "
+            f"got: '{last_line}'\nFull output:\n{output}"
+        )
+
+        assert last_line == f"{ERROR_CODE_PREFIX}{SUCCESS}", (
+            f"Last line should be '{ERROR_CODE_PREFIX}{SUCCESS}', "
+            f"got: '{last_line}'"
+        )
+
+    def test_error_code_is_grepable(self):
+        """ERROR_CODE: should be present and grep-able."""
+        result = subprocess.run(
+            [sys.executable, "-m", "resilient_app", "--demo"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        stderr_output = result.stderr
+
+        assert ERROR_CODE_PREFIX in stderr_output, (
+            f"'{ERROR_CODE_PREFIX}' should be in stderr\n"
+            f"Stderr:\n{stderr_output}"
+        )
+
+        error_code_lines = [line for line in stderr_output.split("\n") if ERROR_CODE_PREFIX in line]
+        assert len(error_code_lines) >= 1, f"Should have at least one line with '{ERROR_CODE_PREFIX}'"

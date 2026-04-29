@@ -19,6 +19,8 @@ class StructuredFormatter(logging.Formatter):
 
     Format:
     <timestamp> <level> <logger> [<code>] <message> [key1=value1 key2=value2]
+
+    Stack traces are included as escaped single-line strings in the 'stack=' field.
     """
 
     def format(self, record: logging.LogRecord) -> str:
@@ -44,7 +46,8 @@ class StructuredFormatter(logging.Formatter):
             parts.append(f"{key}={value}")
 
         if record.exc_info and record.levelno >= logging.ERROR:
-            parts.append(self.formatException(record.exc_info))
+            stack_str = self.formatException(record.exc_info)
+            parts.append(f"stack={stack_str}")
 
         return " ".join(parts)
 
@@ -52,7 +55,9 @@ class StructuredFormatter(logging.Formatter):
         import traceback
 
         lines = traceback.format_exception(*exc_info)
-        return "\n" + "".join(lines).rstrip()
+        stack_str = "".join(lines)
+        escaped = stack_str.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", "\\t").replace("'", "\\'")
+        return escaped
 
 
 class ContextFilter(logging.Filter):
